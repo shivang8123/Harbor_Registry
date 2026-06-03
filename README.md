@@ -206,7 +206,7 @@ START
 
 ### Step 1: Register OS and Install Required Packages
 
-```bash
+```
 # RHEL only: Register with subscription manager
 subscription-manager register
 
@@ -226,7 +226,7 @@ systemctl status docker
 
 ### Step 2: Prepare Directory Structure
 
-```bash
+```
 # Create NKP directories
 mkdir -p /nkp/bundles
 mkdir -p /cert
@@ -237,7 +237,7 @@ cd /nkp/bundles
 
 ### Step 3: Download NKP Air-Gapped Bundle
 
-```bash
+```
 # Download bundle (replace <NKP_BUNDLE_URL> with actual URL)
 wget "<NKP_BUNDLE_URL>/nkp-air-gapped-bundle_v2.16.1_linux_amd64.tar.gz"
 
@@ -250,7 +250,7 @@ cd nkp-v2.16.1
 
 ### Step 4: Load NKP Docker Images
 
-```bash
+```
 # Load bootstrap image
 docker load -i konvoy-bootstrap-image-v2.16.1.tar
 
@@ -263,7 +263,7 @@ docker images | grep -E 'konvoy|nkp'
 
 ### Step 5: Install NKP CLI and kubectl
 
-```bash
+```
 cd /nkp/bundles/nkp-v2.16.1/cli/
 
 # Install NKP binary
@@ -283,7 +283,7 @@ kubectl version --client
 
 ### Step 6: Create NKP Bootstrap Cluster
 
-```bash
+```
 cd /nkp/bundles/nkp-v2.16.1
 
 # Create bootstrap cluster (this creates a local Kind cluster)
@@ -297,7 +297,7 @@ kubectl get po -A
 
 ### Step 7: Configure Storage for Harbor
 
-```bash
+```
 # Check available disks
 lsblk
 
@@ -323,7 +323,7 @@ sudo mount -a
 
 ### Step 8: Generate SSL Certificates for Harbor
 
-```bash
+```
 # Create certificate directory
 mkdir -p /cert && cd /cert
 
@@ -366,7 +366,7 @@ CN=harbor.local
 subjectAltName = @alt_names
 
 [ alt_names ]
-IP.1 = 10.48.107.198
+IP.1 = 10.10.x.x
 DNS.1 = harbor.local
 
 [ v3_req ]
@@ -395,7 +395,7 @@ openssl x509 -in ssl.crt -text -noout
 
 ### Step 9: Download and Extract Harbor
 
-```bash
+```
 cd /nkp/bundles/nkp-v2.16.1
 mkdir -p harbor && cd harbor
 
@@ -410,7 +410,7 @@ cd harbor
 
 ### Step 10: Configure Harbor
 
-```bash
+```
 # Copy template
 cp harbor.yml.tmpl harbor.yml
 
@@ -422,7 +422,7 @@ vi harbor.yml
 
 ```yaml
 # Harbor hostname or IP
-hostname: 10.48.107.198
+hostname: 10.10.10.x.x
 
 # HTTPS configuration
 https:
@@ -447,7 +447,7 @@ log:
 
 ### Step 11: Install and Start Harbor
 
-```bash
+```
 # Prepare Harbor (generates docker-compose files)
 ./prepare
 
@@ -468,25 +468,25 @@ Expected running containers:
 
 ### Step 12: Push NKP Images to Harbor
 
-```bash
+```
 cd /nkp/bundles/nkp-v2.16.1/container-images/
 
 # Push image bundle to Harbor
 nkp push bundle \
   --bundle /nkp/bundles/nkp-v2.16.1/container-images/kommander-image-bundle-v2.16.1.tar \
-  --to-registry 10.48.107.198/nkp \
+  --to-registry 10.10.10.x.x/nkp \
   --to-registry-username admin \
   --to-registry-password Harbor12345 \
   --to-registry-ca-cert-file /cert/rootCA.pem
 
 # Verify images are available in Harbor
-# Access Harbor UI: https://10.48.107.198
+# Access Harbor UI: https://10.10.x.x
 # Login: admin / Harbor12345
 ```
 
 ### Step 13: Generate SSH Keys (Optional but Recommended)
 
-```bash
+```
 # Generate SSH key for cluster operations
 ssh-keygen -t ed25519 -f ~/.ssh/nkp-cluster-key -N ""
 
@@ -506,13 +506,13 @@ Harbor uses self-signed certificates by default. For production, consider:
 2. **Certificate Validation**: Always verify against your Root CA
 3. **Client Configuration**: Ensure client systems trust the Root CA:
 
-```bash
+```
 # On client systems, trust the Harbor CA
 sudo cp /cert/rootCA.pem /etc/pki/ca-trust/source/anchors/harbor-ca.pem
 sudo update-ca-trust extract
 
 # Verify Docker can connect to Harbor
-docker login -u admin -p Harbor12345 10.48.107.198
+docker login -u admin -p Harbor12345 10.x.x.x
 ```
 
 ### NKP Cluster Configuration
@@ -529,7 +529,7 @@ Default bootstrap cluster details:
 
 All NKP nodes must trust the Harbor CA certificate:
 
-```bash
+```
 # Distribute rootCA.pem to all cluster nodes
 scp /cert/rootCA.pem node-ip:/etc/pki/ca-trust/source/anchors/
 ssh node-ip "sudo update-ca-trust extract"
@@ -544,7 +544,7 @@ ssh node-ip "sudo update-ca-trust extract"
 **Problem**: `docker: command not found`
 
 **Solution**:
-```bash
+```
 # Verify Docker installation
 systemctl status docker
 which docker
@@ -558,7 +558,7 @@ sudo systemctl restart docker
 **Problem**: Harbor containers fail to start
 
 **Solution**:
-```bash
+```
 # Check logs
 docker-compose -f /path/to/harbor/docker-compose.yml logs
 
@@ -574,18 +574,18 @@ docker-compose -f /path/to/harbor/docker-compose.yml restart
 
 ### Image Push Failures
 
-**Problem**: `docker push 10.48.107.198/nkp/image fails`
+**Problem**: `docker push 10.x.1.x/nkp/image fails`
 
 **Solution**:
-```bash
+```
 # Verify Harbor is running
-curl -k https://10.48.107.198/api/v2.0/projects
+curl -k https://10.x.1.x/api/v2.0/projects
 
 # Check Docker login
-docker login 10.48.107.198
+docker login 10.48.1x.x
 
 # Verify certificate trust
-curl -vk https://10.48.107.198/api/v2.0/projects
+curl -vk https://10.x.1.x/api/v2.0/projects
 
 # Check DNS resolution (if using hostname)
 nslookup harbor.local
@@ -596,7 +596,7 @@ nslookup harbor.local
 **Problem**: `nkp create bootstrap` fails
 
 **Solution**:
-```bash
+```
 # Clean up previous bootstrap
 docker ps -a | grep konvoy-bootstrap | awk '{print $1}' | xargs docker rm -f
 
@@ -615,7 +615,7 @@ nkp create bootstrap --verbose
 **Problem**: `x509: certificate signed by unknown authority`
 
 **Solution**:
-```bash
+```
 # Verify Root CA is trusted
 cat /etc/pki/ca-trust/source/anchors/rootCA.pem
 
@@ -660,7 +660,6 @@ docker exec <harbor-container> curl -v https://localhost
 ```
 nkp-harbor-deployment/
 ├── README.md                          # This file
-├── LICENSE                            # MIT License
 ├── scripts/                           # Automation scripts
 │   ├── 01-setup-bastion.sh          # Bastion VM setup
 │   ├── 02-prepare-storage.sh         # Storage configuration
@@ -693,11 +692,7 @@ Contributions are welcome! Please follow these guidelines:
 4. **Test** your changes in an air-gapped environment
 5. **Submit** a Pull Request with detailed description
 
----
 
-## License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
@@ -725,4 +720,4 @@ For questions and support:
 ---
 
 **Last Updated**: June 2026  
-**Maintained By**: DevOps Team @ KubeRox Technologies
+**Maintained By**: **Shivang Bhardwaj**
