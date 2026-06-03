@@ -37,23 +37,23 @@ spec:
   controlPlane:
     hosts:
       # Control plane node(s)
-      - publicAddress: "10.48.107.10"
-        privateAddress: "10.48.107.10"
-        bastion: "10.48.107.201"  # Bastion VM IP
+      - publicAddress: "10.10.10.10"
+        privateAddress: "10.10.10.10"
+        bastion: "10.x.x.x"  # Bastion VM IP
         hostname: "control-plane-01"
         operatingSystem: "rocky"
 
   # Worker node configuration
   workers:
     - hosts:
-        - publicAddress: "10.48.107.11"
-          privateAddress: "10.48.107.11"
-          bastion: "10.48.107.201"
+        - publicAddress: "10.10.10.10"
+          privateAddress: "10.10.10.10"
+          bastion: "10.4x.1x.x1"
           hostname: "worker-01"
           operatingSystem: "rocky"
-        - publicAddress: "10.48.107.12"
-          privateAddress: "10.48.107.12"
-          bastion: "10.48.107.201"
+        - publicAddress: "110.4x.1x.x1"
+          privateAddress: "10.4x.1x.x1"
+          bastion: "110.4x.1x.x1"
           hostname: "worker-02"
           operatingSystem: "rocky"
 
