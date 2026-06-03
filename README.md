@@ -1,6 +1,5 @@
 # NKP v2.16.1 + Harbor Private Registry Deployment
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Platform](https://img.shields.io/badge/Platform-Nutanix%20AHV-orange)
 ![OS](https://img.shields.io/badge/OS-RHEL%2FRocky%209-red)
 ![NKP Version](https://img.shields.io/badge/NKP-v2.16.1-brightgreen)
