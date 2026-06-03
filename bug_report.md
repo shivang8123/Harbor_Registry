@@ -43,7 +43,5 @@ What have you already tried?
 Add any other context about the problem here.
 
 ## Checklist
-- [ ] I have checked [Troubleshooting](../docs/TROUBLESHOOTING.md) documentation
-- [ ] I have searched existing [Issues](../../issues) for duplicates
 - [ ] I have removed sensitive information (passwords, IP addresses, keys)
 - [ ] I can reproduce this issue consistently
