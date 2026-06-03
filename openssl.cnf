@@ -38,8 +38,8 @@ subjectAltName = @alt_names
 
 [ alt_names ]
 # IP address(es) for the certificate
-# Replace 10.48.107.198 with your Harbor IP
-IP.1 = 10.48.107.198
+# Replace 10.4x.x.x with your Harbor IP
+IP.1 = 10.x.x.x
 
 # DNS name(s) for the certificate
 # Replace with your actual hostname if using DNS
@@ -124,7 +124,7 @@ keyUsage = critical, keyCertSign, cRLSign
 #
 # Harbor Server Certificate:
 #   Subject: CN=harbor.local, O=NKP, ST=Haryana, C=IN
-#   SAN: IP 10.48.107.198, DNS harbor.local, DNS harbor
+#   SAN: IP 10.4x.x.x, DNS harbor.local, DNS harbor
 #   Validity: 825 days (2+ years) from signing
 #   Usage: HTTPS on Harbor registry (serverAuth)
 #
@@ -156,7 +156,7 @@ keyUsage = critical, keyCertSign, cRLSign
 #   openssl x509 -in ssl.crt -noout -pubkey
 #
 # Test HTTPS connection to Harbor:
-#   openssl s_client -connect 10.48.107.198:443 -cacert rootCA.pem
+#   openssl s_client -connect 10.4x.x.x:443 -cacert rootCA.pem
 #
 
 ---
