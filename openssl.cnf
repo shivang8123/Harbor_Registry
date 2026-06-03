@@ -1,0 +1,189 @@
+# OpenSSL Configuration for Harbor Certificate Generation
+# Location: /cert/openssl.cnf
+# Used to generate Harbor server certificate with proper SAN (Subject Alternative Name)
+
+[ req ]
+default_bits       = 2048
+prompt             = no
+default_md         = sha256
+req_extensions     = req_ext
+distinguished_name = dn
+string_mask        = utf8only
+
+[ dn ]
+# Country Name (2 letter code)
+C = IN
+
+# State or Province Name (full name)
+ST = Haryana
+
+# Locality Name (city)
+L = Gurgaon
+
+# Organization Name
+O = NKP
+
+# Organizational Unit Name
+OU = IT
+
+# Common Name (must match hostname or IP)
+CN = harbor.local
+
+# Uncomment for additional DN fields if needed:
+# emailAddress = admin@example.com
+
+[ req_ext ]
+# Request extensions - included in CSR
+subjectAltName = @alt_names
+
+[ alt_names ]
+# IP address(es) for the certificate
+# Replace 10.48.107.198 with your Harbor IP
+IP.1 = 10.48.107.198
+
+# DNS name(s) for the certificate
+# Replace with your actual hostname if using DNS
+DNS.1 = harbor.local
+DNS.2 = harbor
+
+# Additional hostnames can be added:
+# DNS.3 = harbor.example.com
+# DNS.4 = registry.example.com
+
+[ v3_req ]
+# This section is used when signing the certificate
+subjectAltName = @alt_names
+
+# Key usage constraints
+keyUsage = digitalSignature, keyEncipherment, dataEncipherment
+
+# Extended key usage
+extendedKeyUsage = serverAuth
+
+[ v3_ca ]
+# CA certificate constraints
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true
+
+[ v3_intermediate_ca ]
+# Intermediate CA certificate constraints
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true, pathlen:0
+keyUsage = critical, keyCertSign, cRLSign
+
+---
+
+# USAGE INSTRUCTIONS:
+# 
+# 1. Generate Root CA:
+#    openssl genrsa -out rootCA.key 2048
+#    openssl req -x509 -new -nodes \
+#      -key rootCA.key \
+#      -sha256 \
+#      -days 1024 \
+#      -out rootCA.pem \
+#      -subj "/C=IN/ST=Haryana/L=Gurgaon/O=NKP/OU=IT/CN=harbor-ca"
+#
+# 2. Generate Harbor private key:
+#    openssl genrsa -out ssl.key 2048
+#
+# 3. Generate Certificate Signing Request (CSR):
+#    openssl req -new -key ssl.key -out ssl.csr -config openssl.cnf
+#
+# 4. Sign certificate with Root CA:
+#    openssl x509 -req \
+#      -in ssl.csr \
+#      -CA rootCA.pem \
+#      -CAkey rootCA.key \
+#      -CAcreateserial \
+#      -out ssl.crt \
+#      -days 825 \
+#      -sha256 \
+#      -extfile openssl.cnf \
+#      -extensions v3_req
+#
+# 5. Trust the Root CA on the system:
+#    sudo cp rootCA.pem /etc/pki/ca-trust/source/anchors/
+#    sudo update-ca-trust extract
+#
+# 6. Verify the certificate:
+#    openssl x509 -in ssl.crt -text -noout
+#    openssl verify -CAfile rootCA.pem ssl.crt
+#
+
+---
+
+# CERTIFICATE DETAILS FOR THIS CONFIGURATION:
+#
+# Root CA Details:
+#   Subject: CN=harbor-ca, O=NKP, ST=Haryana, C=IN
+#   Validity: 1024 days (2+ years) from creation
+#   Usage: Sign all Harbor certificates
+#
+# Harbor Server Certificate:
+#   Subject: CN=harbor.local, O=NKP, ST=Haryana, C=IN
+#   SAN: IP 10.48.107.198, DNS harbor.local, DNS harbor
+#   Validity: 825 days (2+ years) from signing
+#   Usage: HTTPS on Harbor registry (serverAuth)
+#
+# Customization:
+#   - Update CN to match your Harbor hostname
+#   - Update IP.1 to match your Harbor IP address
+#   - Add additional DNS entries if using FQDN
+#   - Adjust C/ST/L/O/OU to match your organization
+#   - Increase validity days if needed (within HSM/security policies)
+#
+
+---
+
+# VERIFICATION COMMANDS:
+#
+# View CSR details:
+#   openssl req -in ssl.csr -text -noout
+#
+# View certificate details:
+#   openssl x509 -in ssl.crt -text -noout
+#
+# Verify certificate chain:
+#   openssl verify -CAfile rootCA.pem ssl.crt
+#
+# Check certificate validity:
+#   openssl x509 -in ssl.crt -noout -dates
+#
+# Extract public key from certificate:
+#   openssl x509 -in ssl.crt -noout -pubkey
+#
+# Test HTTPS connection to Harbor:
+#   openssl s_client -connect 10.48.107.198:443 -cacert rootCA.pem
+#
+
+---
+
+# RENEWAL INSTRUCTIONS:
+#
+# To renew a certificate before expiration:
+#
+# 1. Generate new CSR from existing key (or new key):
+#    openssl req -new -key ssl.key -out ssl-new.csr -config openssl.cnf
+#
+# 2. Sign new certificate:
+#    openssl x509 -req \
+#      -in ssl-new.csr \
+#      -CA rootCA.pem \
+#      -CAkey rootCA.key \
+#      -CAcreateserial \
+#      -out ssl-new.crt \
+#      -days 825 \
+#      -sha256 \
+#      -extfile openssl.cnf \
+#      -extensions v3_req
+#
+# 3. Back up old certificate and swap:
+#    cp ssl.crt ssl.crt.bak
+#    cp ssl-new.crt ssl.crt
+#
+# 4. Reload Harbor:
+#    docker-compose -f /path/to/docker-compose.yml restart core registry
+#

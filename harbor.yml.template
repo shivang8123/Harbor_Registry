@@ -1,0 +1,188 @@
+# Harbor Configuration Template
+# This is a reference for harbor.yml configuration
+# Actual file: /nkp/bundles/nkp-v2.16.1/harbor/harbor/harbor.yml
+
+# Hostname or IP address where Harbor is deployed
+# For air-gapped: Use internal IP address
+hostname: 10.48.107.198
+
+# HTTP configuration
+http:
+  # Port for HTTP traffic (typically redirects to HTTPS)
+  port: 80
+
+# HTTPS configuration
+https:
+  # HTTPS port
+  port: 443
+  # Path to SSL certificate
+  certificate: /cert/ssl.crt
+  # Path to SSL private key
+  private_key: /cert/ssl.key
+  # Uncomment to enable HTTP/2 support
+  # http2_enable: true
+
+# Harbor internal database configuration
+database:
+  # Database password
+  password: password
+  max_idle_conns: 100
+  max_open_conns: 900
+  conn_max_lifetime: 5m
+  conn_test_on_borrow: false
+  conn_max_idle_time: 0s
+
+# Data storage configuration
+data_volume: /data
+
+# Harbor admin password
+harbor_admin_password: Harbor12345
+
+# Log configuration
+log:
+  # Log level: debug, info, warning, error, fatal
+  level: info
+  # Local filesystem logging
+  local:
+    # Number of rotated log files to keep
+    rotate_count: 50
+    # Maximum size of each log file (G, M, K suffix)
+    rotate_size: G
+    # Log file location
+    location: /var/log/harbor
+
+# Registry configuration
+registry:
+  # Registry storage backend
+  storage:
+    # Maximum number of concurrent requests to storage backend
+    max_request_body_size: 0
+    # Custom cache layer configuration (optional)
+    # cache:
+    #   blobdescriptor: ""
+
+# Jobservice configuration
+jobservice:
+  # Maximum job workers
+  max_job_workers: 10
+  ui_max_job_workers: 5
+  # Jobservice log level
+  logger_level: info
+
+# Notification configuration
+notification:
+  # Webhook event types to send notifications for
+  webhook_job_max_retry: 10
+  # Custom webhook endpoints can be configured through UI
+
+# Upload configuration
+upload:
+  # Maximum upload size in bytes
+  relative_root_path: /var/log/harbor/uploads
+
+# Chart museum configuration (Helm charts)
+chart:
+  # Enable chart repository functions
+  absolute_url: disabled
+  # Chart storage location
+  storage_provider_name: filesystem
+  # Chart cache layer
+  cache_layer:
+    enabled: false
+
+# Garbage collection configuration
+gc:
+  # Enable garbage collection job
+  enabled: true
+  # Garbage collection schedule (cron format)
+  # Example: Daily at 2 AM
+  schedule: "0 2 * * *"
+  delete_untagged: true
+  audit_delete: false
+
+# Proxy cache configuration (optional)
+proxy:
+  # Enable proxy cache for remote registries
+  enabled: false
+  # remoteurl: https://registry.docker.io
+  # username: [username for upstream registry]
+  # password: [password for upstream registry]
+
+# Metrics configuration
+metrics:
+  # Enable Prometheus metrics endpoint
+  enabled: false
+  # Access metrics at /metrics (when enabled)
+  # port: 8001
+
+# Tracing configuration (optional)
+trace:
+  # Enable distributed tracing
+  enabled: false
+  # sample_rate: 1
+  # namespace:
+  # attributes:
+  #   key: value
+
+# Security configuration
+# expose:
+#   tls:
+#     # Minimum TLS version
+#     min_version: tls12
+#     # Cipher suites
+#     cipher_suites:
+#       - TLS_RSA_WITH_AES_128_CBC_SHA
+#       - TLS_RSA_WITH_AES_256_CBC_SHA
+
+# Uncomment to enable external authentication (LDAP, OAuth2, etc.)
+# auth_mode: ldap_auth
+# ldap_url: ldap://ldap.example.com
+# ldap_search_dn: cn=admin,dc=example,dc=com
+# ldap_search_password: password
+# ldap_base_dn: ou=people,dc=example,dc=com
+# ldap_filter: (objectClass=person)
+# ldap_uid: uid
+# ldap_scope: 3
+# ldap_connection_timeout: 5
+# ldap_verify_cert: true
+# ldap_group_base_dn: ou=group,dc=example,dc=com
+# ldap_group_attribute_name: memberUid
+# ldap_group_search_filter: objectClass=groupOfNames
+# ldap_group_search_scope: 2
+# ldap_group_admin_dn: ""
+
+---
+# Notes for air-gapped deployment:
+# 
+# 1. Certificates:
+#    - Must be generated with Root CA (self-signed acceptable for lab)
+#    - Include IP address and hostname in SAN
+#    - Certificate validity: 825 days recommended
+#
+# 2. Storage:
+#    - /data mount point must exist and have sufficient space (500GB+ recommended)
+#    - Use fast SSD storage for better performance
+#    - Regular backups recommended for production
+#
+# 3. Passwords:
+#    - Change harbor_admin_password from default immediately
+#    - Use strong passwords (min 8 chars, mixed case, numbers, special chars)
+#    - Store safely (password manager recommended)
+#
+# 4. Performance tuning:
+#    - Adjust gc.schedule based on image push frequency
+#    - Consider max_job_workers based on CPU cores
+#    - Monitor disk usage for gc needs
+#
+# 5. Security best practices:
+#    - Use HTTPS only (disable HTTP in production)
+#    - Enable RBAC for multi-tenant scenarios
+#    - Configure audit logging
+#    - Regular security updates for Harbor
+#
+# 6. Backup considerations:
+#    - Back up /data directory regularly
+#    - Back up Harbor database
+#    - Document certificate and password recovery procedures
+#
+# Reference: https://goharbor.io/docs/

@@ -1,0 +1,129 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Sensitive files
+*.key
+*.pem
+*.crt
+*.csr
+!configs/openssl.cnf
+!examples/**
+secrets/
+.env
+.env.local
+.env.*.local
+
+# Harbor files
+harbor/
+harbor-offline-installer-*.tgz
+common/config/
+docker-compose.yml
+docker-compose.*.yml
+!configs/docker-compose.override.yml
+
+# NKP bundles
+nkp-air-gapped-bundle*.tar.gz
+*.tar
+*.tar.gz
+bundles/
+*-image-v*.tar
+
+# Kubeconfig and certificates
+kubeconfig*
+*.kubeconfig
+admin.conf
+kubelet.conf
+
+# SSH Keys
+*.pub
+**/id_rsa
+**/id_ed25519
+!examples/
+
+# Kubernetes manifests (generated)
+*.yaml~
+*.yml~
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Logs
+*.log
+logs/
+*.out
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Data directories (large)
+/data/
+/var/
+/cache/
+
+# Config backups
+*.backup
+*.bak
+*.orig
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node modules (if any doc tools used)
+node_modules/
+yarn.lock
+package-lock.json
+
+# Documentation build artifacts
+site/
+*.md.bak
+
+# Git
+.git/
+.gitattributes
+
+# Keep examples
+!examples/**/*
+!docs/**/*
+!configs/**/*
+!scripts/**/*

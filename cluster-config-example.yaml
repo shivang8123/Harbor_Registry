@@ -1,0 +1,165 @@
+# Example NKP Cluster Configuration
+# This is a reference configuration for deploying NKP management cluster
+# Adapt values according to your environment
+
+apiVersion: kubeone.k8c.io/v1beta2
+kind: KubeOneCluster
+metadata:
+  name: management-cluster
+  namespace: kube-system
+
+# Cluster configuration
+spec:
+  # Kubernetes version
+  versions:
+    kubernetes: "1.27.5"  # NKP v2.16.1 supports v1.27+
+
+  # Container runtime configuration
+  containerRuntime:
+    docker: {}  # Using Docker as container runtime
+
+  # Cluster networking
+  clusterNetwork:
+    # Pod network (CNI)
+    podSubnet: "10.244.0.0/16"
+    # Service network
+    serviceSubnet: "10.96.0.0/12"
+    # API server port
+    apiServer:
+      port: 6443
+
+  # CNI provider (Calico for air-gapped)
+  addons:
+    cni:
+      canal: {}  # Calico + Flannel combination
+
+  # Control plane configuration
+  controlPlane:
+    hosts:
+      # Control plane node(s)
+      - publicAddress: "10.48.107.10"
+        privateAddress: "10.48.107.10"
+        bastion: "10.48.107.201"  # Bastion VM IP
+        hostname: "control-plane-01"
+        operatingSystem: "rocky"
+
+  # Worker node configuration
+  workers:
+    - hosts:
+        - publicAddress: "10.48.107.11"
+          privateAddress: "10.48.107.11"
+          bastion: "10.48.107.201"
+          hostname: "worker-01"
+          operatingSystem: "rocky"
+        - publicAddress: "10.48.107.12"
+          privateAddress: "10.48.107.12"
+          bastion: "10.48.107.201"
+          hostname: "worker-02"
+          operatingSystem: "rocky"
+
+  # SSH configuration
+  sshConfig:
+    agent: true
+    # SSH key for cluster node access
+    privateKeyFile: "~/.ssh/nkp-cluster-key"
+    # SSH user
+    user: "root"
+    # SSH port
+    port: 22
+    timeout: "300s"
+    # Connection settings
+    connectionModules:
+      - name: "ssh"
+
+  # Feature toggles
+  features:
+    staticWorkerNodes: true
+    capi: true  # Enable Cluster API
+    metricsServer: true
+
+  # Proxy configuration (if behind proxy)
+  proxy:
+    # http: "http://proxy.example.com:8080"
+    # https: "https://proxy.example.com:8080"
+    # noProxy: "localhost,127.0.0.1,10.0.0.0/8"
+
+  # Certification configuration
+  certificateKey: ""  # Leave empty for auto-generation
+
+  # EtcdBackup configuration
+  etcd:
+    backupInterval: "1h"
+    backupRetention: "24h"
+
+---
+# Additional Notes for Air-Gapped Deployment:
+
+# 1. Bastion Configuration:
+#    - Ensure bastion VM can SSH into all nodes
+#    - Key-based authentication recommended
+#    - Test connectivity before deployment: ssh -i key root@10.48.107.10
+
+# 2. Image Registry Configuration:
+#    - Add Harbor registry to all nodes:
+#      /etc/docker/daemon.json or /etc/containers/registries.conf
+#    - Configure with rootCA.pem for HTTPS
+#    - Example for Docker:
+#      {
+#        "insecure-registries": ["10.48.107.198"],
+#        "registry-mirrors": ["https://10.48.107.198"]
+#      }
+
+# 3. Network Requirements:
+#    - Pod subnet and Service subnet should not overlap with existing networks
+#    - Adjust as needed for your network topology
+#    - Verify routing between Bastion and cluster nodes
+
+# 4. Operating System:
+#    - All nodes must be Rocky Linux 9 or RHEL 9
+#    - Systems must be registered and have current patches
+#    - Required packages: docker-ce, containerd, curl, wget
+
+# 5. Firewall Rules:
+#    - Ensure these ports are open between nodes:
+#      - 6443 (API Server)
+#      - 2379-2380 (etcd)
+#      - 10250 (kubelet)
+#      - 30000-32767 (NodePort services)
+#    - Harbor must be accessible on 443 from all nodes
+
+# 6. Resource Requirements:
+#    - Control plane: minimum 2 CPUs, 4 GB RAM
+#    - Worker nodes: minimum 2 CPUs, 4 GB RAM
+#    - Etcd storage: minimum 20 GB per control plane node
+#    - Container storage: minimum 50 GB per node
+
+# 7. High Availability:
+#    - For production: Deploy multiple control plane nodes (odd number: 3, 5)
+#    - Requires load balancer for API server
+#    - Configure shared etcd storage if using external etcd
+
+# 8. Post-Deployment:
+#    After cluster is created:
+#    1. Verify cluster health:
+#       kubectl get nodes
+#       kubectl get po -A
+#    2. Deploy Kommander for management
+#    3. Configure CAPI for node scaling
+#    4. Deploy workload clusters as needed
+
+---
+# CLI Deployment Command:
+
+# Deploy cluster from bootstrap:
+# nkp create cluster -c management-cluster.yaml
+
+# Monitor deployment:
+# watch kubectl get nodes
+# kubectl get po -A
+
+# Troubleshooting:
+# nkp status -c management-cluster.yaml
+# kubectl get events -A --sort-by='.lastTimestamp'
+# docker logs <container-id> on bastion
+
+---
